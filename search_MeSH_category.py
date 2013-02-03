@@ -23,16 +23,11 @@ def HTMLGetCategory(page):
              unicode('ref'): unicode(m.group(2))}
             for m in re.finditer(regex , page)]
 
-with io.open('ltarkiv.lakartidning.se-MeSH.json', 'r', encoding='utf-8') as infile:
-    categories = json.load(infile)
+def searchMeSHNo(meshno):
+    return {u'articles': HTTPGetCategory(meshno)}
 
-def artnosPerCategory():
-    return [{u'meshno': cat[u'meshno'],
-             u'name_sv': cat[u'name_sv'],
-             u'articles': HTTPGetCategory(cat[u'meshno'])}
-            for cat in categories]
+meshno = sys.argv[1]
 
-artnosJson = json.dumps(artnosPerCategory(), ensure_ascii=False)
-
-with io.open('artnos_per_category.json', 'w', encoding='utf-8') as outfile:
+with io.open('cat/mesh-' + meshno + '.search.json', 'w', encoding='utf-8') as outfile:
+    artnosJson = json.dumps(searchMeSHNo(meshno), ensure_ascii=False)
     outfile.write(artnosJson)
