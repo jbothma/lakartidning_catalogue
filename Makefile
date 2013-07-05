@@ -1,36 +1,20 @@
-MESHNOS = $(shell find cat -type f -name 'mesh-*.catno.json')
-SEARCH = $(patsubst %.catno.json, %.search.json, $(MESHNOS))
+ISSUEPAGES = $(patsubst %, html/nummer%, $(shell cat tables/issuenum))
 
-ISSUES = $(shell find issues -type f -regex "issues/issue-[0-9][0-9][0-9][0-9][0-9][0-9].json")
-ISSUEARTNOS = $(patsubst issues/issue-%.json, issues/issue-%-artnos.json, $(ISSUES))
+tables/issue-artno: $(ISSUEPAGES)
+	perl -nle 'while (/artNo(\d+)/g) {$artno=$1; $issueno=$ARGV; $issueno =~ s/html\/nummer(\d+)/$1/; print $issueno,"-",$artno}' html/nummer*>tables/issueno-artno
 
-ARTNOS = $(wildcard artnos/artno-*.json)
-ARTDATA = $(patsubst artnos/artno-%.json, artdata/art-%-data.json, $(ARTNOS))
+html/nummer%: html
+	wget -O html/nummer$* http://ltarkiv.lakartidningen.se/nummer$*
 
-MESHNO_ARTNOS = $(shell ./list_artnos_per_meshno.py $(MESHNO))
-PDFS = $(patsubst %, corpus/pda%.pdf, $(MESHNO_ARTNOS))
+tables/issuenum: tables html/nr.htm
+	perl -nle 'while (/nummer(\d+)/g) {print $$1}' html/nr.htm > tables/issuenum
 
-corpus: $(PDFS)
+tables:
+	mkdir -p tables
 
-# use PDF from local cache
-corpus/pda%.pdf: /Users/jdb/thesis/data/medical_sv/all_pdfs/pda%.pdf
-	cp /Users/jdb/thesis/data/medical_sv/all_pdfs/pda$*.pdf corpus
+html/nr.htm: html
+	wget -O html/nr.htm "http://ltarkiv.lakartidningen.se/nr.htm"
 
-# fill local cache
-/Users/jdb/thesis/data/medical_sv/all_pdfs/pda%.pdf:
-	echo "need to download PDF for " $*
+html:
+	mkdir -p html
 
-art-data: $(ARTDATA)
-
-artdata/art-%-data.json:
-	./get_article_data.py $*
-
-issue-artnos: $(ISSUEARTNOS)
-
-issues/issue-%-artnos.json:
-	./list_issue_artnos.py $*
-
-search: $(SEARCH)
-
-%.search.json: %.catno.json
-	./search_MeSH_category.py $(patsubst cat/mesh-%, %, $*)
