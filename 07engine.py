@@ -9,7 +9,7 @@ id = sys.argv[1]
 
 with io.open('html/07engine'+ id,
              'r',
-             encoding='iso-8859-1') as infile:
+             encoding='utf-8') as infile:
     html = infile.read(-1)
     infile.close()
     soup = BeautifulSoup(html)
